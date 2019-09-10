@@ -18,6 +18,10 @@ def index():
 def static_content(content):
     return render_template(content)
 
+@app.route('/cuantasletras/<nombre>')
+def cuantas_letras(nombre):
+    return str(len(nombre))
+
 @app.route('/users', methods = ['POST'])
 def create_user():
     c =  json.loads(request.form['values'])
