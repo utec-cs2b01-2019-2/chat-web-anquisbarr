@@ -18,9 +18,44 @@ def index():
 def static_content(content):
     return render_template(content)
 
+#Ejercicio 1
+
 @app.route('/cuantasletras/<nombre>')
 def cuantas_letras(nombre):
     return str(len(nombre))
+
+#Ejercicio 2
+
+@app.route('/suma/<numero>')
+def suma(numero):
+        if 'suma' not in session:
+            session['suma'] = 0;
+        suma = session['suma']
+        suma = suma + int(numero)
+        session['suma'] = suma
+        return str(suma)
+
+#Ejercicio 3
+
+@app.route('/authenticate_simple/<username>/<password>')
+def authenticate_simple(username, password):
+    if username == 'jbellido'and password =='qwerty':
+        session['username'] = username;
+        return "Welcome "+username;
+    else:
+        return "Sorry "+username+" is not a valid username.";
+
+#Ejercicio 4
+
+@app.route('/authenticate', methods=['POST'])
+def authenticate():
+    username=request.form['username']
+    password=request.form['password']
+    if username == 'jbellido' and  password=='qwerty':
+        session['username']=username;
+        return "Welcome "+username+"!";
+    else:
+        return username+" is not a valid username or wrong password. Try again";
 
 @app.route('/users', methods = ['POST'])
 def create_user():
@@ -180,28 +215,28 @@ def send_message():
     session.commit()
     return 'Message sent'
 
-@app.route('/authenticate', methods = ['POST'])
-def authenticate():
-    #Get data form request
-    time.sleep(3)
-    message = json.loads(request.data)
-    username = message['username']
-    password = message['password']
+#@app.route('/authenticate', methods = ['POST'])
+#def authenticate():
+#    #Get data form request
+#    time.sleep(3)
+#    message = json.loads(request.data)
+#    username = message['username']
+ #   password = message['password']
 
     # Look in database
-    db_session = db.getSession(engine)
+  #  db_session = db.getSession(engine)
 
-    try:
-        user = db_session.query(entities.User
-            ).filter(entities.User.username==username
-            ).filter(entities.User.password==password
-            ).one()
-        session['logged_user'] = user.id
-        message = {'message':'Authorized'}
-        return Response(message, status=200,mimetype='application/json')
-    except Exception:
-        message = {'message':'Unauthorized'}
-        return Response(message, status=401,mimetype='application/json')
+   # try:
+    #    user = db_session.query(entities.User
+     #       ).filter(entities.User.username==username
+      #      ).filter(entities.User.password==password
+       #     ).one()
+        #session['logged_user'] = user.id
+        #message = {'message':'Authorized'}
+        #return Response(message, status=200,mimetype='application/json')
+    #except Exception:
+        #message = {'message':'Unauthorized'}
+        #return Response(message, status=401,mimetype='application/json')
 
 @app.route('/current', methods = ['GET'])
 def current_user():
