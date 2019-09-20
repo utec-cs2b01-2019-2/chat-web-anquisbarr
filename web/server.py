@@ -39,27 +39,39 @@ def suma(numero):
 
 @app.route('/authenticate_simple/<username>/<password>')
 def authenticate_simple(username, password):
-    if username == 'jbellido'and password =='qwerty':
+    username = request.form['username']
+    password = request.form['password']
+    if username == 'jbellido' and password == 'qwerty':
         session['username'] = username;
-        return "Welcome "+username;
+        return "Welcome " + username + "!";
     else:
-        return "Sorry "+username+" is not a valid username.";
+        return username + " is not a valid username or wrong password. Try again";
 
 #Ejercicio 4
 
-@app.route('/authenticate', methods=['POST'])
-def authenticate():
+@app.route('/authenticate_v2', methods=['POST'])
+def authenticate_v2():
     username=request.form['username']
     password=request.form['password']
-    if username == 'jbellido' and  password=='qwerty':
-        session['username']=username;
-        return "Welcome "+username+"!";
-    else:
-        return username+" is not a valid username or wrong password. Try again";
+    db_session=db.getSession(engine)
+    user = db_session.query(entities.User).filter(
+        entities.User.username == username
+    ).filter(entities.User.password == password
+             ).first()
+
+#17/09 Ejercicio 1
+@app.route('/usuarios',methods=['GET'])
+def todos_los_usuarios():
+    db_session=db.getSession(engine)
+    users = db_session.query(entities.User)
+    response = "Success";
+    for user in users:
+        response+=user.username +" - "
 
 @app.route('/users', methods = ['POST'])
 def create_user():
-    c =  json.loads(request.form['values'])
+    #c =  json.loads(request.form['values'])
+    c = json.loads(request.data)
     user = entities.User(
         username=c['username'],
         name=c['name'],
@@ -89,21 +101,22 @@ def get_users():
     data = dbResponse[:]
     return Response(json.dumps(data, cls=connector.AlchemyEncoder), mimetype='application/json')
 
-@app.route('/users', methods = ['PUT'])
-def update_user():
+@app.route('/users/<id>', methods = ['PUT'])
+def update_user(id):
     session = db.getSession(engine)
-    id = request.form['key']
+    #id = request.form['key']
     user = session.query(entities.User).filter(entities.User.id == id).first()
-    c = json.loads(request.form['values'])
+    # c = json.loads(request.form['values'])
+    c = json.loads(request.data)
     for key in c.keys():
         setattr(user, key, c[key])
     session.add(user)
     session.commit()
     return 'Updated User'
 
-@app.route('/users', methods = ['DELETE'])
-def delete_user():
-    id = request.form['key']
+@app.route('/users/<id>', methods = ['DELETE'])
+def delete_user(id):
+    #id = request.form['key']
     session = db.getSession(engine)
     user = session.query(entities.User).filter(entities.User.id == id).one()
     session.delete(user)
