@@ -18,24 +18,6 @@ def index():
 def static_content(content):
     return render_template(content)
 
-#Ejercicio 1
-
-@app.route('/cuantasletras/<nombre>')
-def cuantas_letras(nombre):
-    return str(len(nombre))
-
-#Ejercicio 2
-
-@app.route('/suma/<numero>')
-def suma(numero):
-        if 'suma' not in session:
-            session['suma'] = 0;
-        suma = session['suma']
-        suma = suma + int(numero)
-        session['suma'] = suma
-        return str(suma)
-
-#Ejercicio 3
 
 @app.route('/authenticate_simple/<username>/<password>')
 def authenticate_simple(username, password):
@@ -59,14 +41,6 @@ def authenticate_v2():
     ).filter(entities.User.password == password
              ).first()
 
-#17/09 Ejercicio 1
-@app.route('/usuarios',methods=['GET'])
-def todos_los_usuarios():
-    db_session=db.getSession(engine)
-    users = db_session.query(entities.User)
-    response = "Success";
-    for user in users:
-        response+=user.username +" - "
 
 @app.route('/users', methods = ['POST'])
 def create_user():
@@ -261,6 +235,59 @@ def current_user():
 def logout():
     session.clear()
     return render_template('login.html')
+
+# API de Groups
+#1. Create
+@app.route ('/groups' , methods = ['POST'])
+def create_group():
+    c = json.loads(request.data)
+    group = entities.Group(
+        name=c['name']
+    )
+    session_db = db.getSession(engine)
+    session_db.add(group)
+    session_db.commit()
+    return 'Group created'
+
+#2. Read
+
+@app.route('/groups/<id>', methods = ['GET'])
+def read_group(id):
+    session_db = db.getSession(engine)
+    group = session_db.query(entities.Group).filter(
+        entities.Group.id == id).first()
+    data = json.dumps(group, cls=connector.AlchemyEncoder)
+    return Response(data, status =200,mimetype='application/json')
+
+@app.route('/groups', methods = ['GET'])
+def get_all_groups():
+    session_db = db.getSession(engine)
+    dbResponse = session_db.query(entities.Group)
+    data = dbResponse[:]
+    return Response(json.dumps(data, cls=connector.AlchemyEncoder), mimetype='application/json')
+
+#3. Update
+
+@app.route('/groups/<id>',methods=['PUT'])
+def update_group(id):
+    session = db.getSession(engine)
+    group = session.query(entities.Group).filter(entities.Group.id == id).first()
+    c = json.loads(request.data)
+    for key in c.keys():
+        setattr(group, key, c[key])
+    session.add(group)
+    session.commit()
+    return 'Updated User'
+
+#4. Delete
+
+@app.route('/groups/<id>', methods=['DELETE'])
+def delete_group(id):
+    session = db.getSession(engine)
+    group = session.query(entities.Group).filter(entities.Group.id == id).one()
+    session.delete(group)
+    session.commit()
+    return "Deleted User"
 
 if __name__ == '__main__':
     app.secret_key = ".."
