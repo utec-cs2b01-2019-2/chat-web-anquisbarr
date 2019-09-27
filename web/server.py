@@ -202,28 +202,28 @@ def send_message():
     session.commit()
     return 'Message sent'
 
-#@app.route('/authenticate', methods = ['POST'])
-#def authenticate():
-#    #Get data form request
-#    time.sleep(3)
-#    message = json.loads(request.data)
-#    username = message['username']
- #   password = message['password']
+@app.route('/authenticate', methods = ['POST'])
+def authenticate():
+    #Get data form request
+    time.sleep(1)
+    message = json.loads(request.data)
+    username = message['username']
+    password = message['password']
 
-    # Look in database
-  #  db_session = db.getSession(engine)
+   # Look in database
+    db_session = db.getSession(engine)
 
-   # try:
-    #    user = db_session.query(entities.User
-     #       ).filter(entities.User.username==username
-      #      ).filter(entities.User.password==password
-       #     ).one()
-        #session['logged_user'] = user.id
-        #message = {'message':'Authorized'}
-        #return Response(message, status=200,mimetype='application/json')
-    #except Exception:
-        #message = {'message':'Unauthorized'}
-        #return Response(message, status=401,mimetype='application/json')
+    try:
+        user = db_session.query(entities.User
+            ).filter(entities.User.username==username
+            ).filter(entities.User.password==password
+            ).one()
+        session['logged_user'] = user.id
+        message = {'message':'Authorized'}
+        return Response(message, status=200,mimetype='application/json')
+    except Exception:
+        message = {'message':'Unauthorized'}
+        return Response(message, status=401,mimetype='application/json')
 
 @app.route('/current', methods = ['GET'])
 def current_user():
