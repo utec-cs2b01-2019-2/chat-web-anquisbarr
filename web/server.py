@@ -7,8 +7,9 @@ import time
 
 db = connector.Manager()
 engine = db.createEngine()
-
 app = Flask(__name__)
+
+#Base
 
 @app.route('/')
 def index():
@@ -18,6 +19,7 @@ def index():
 def static_content(content):
     return render_template(content)
 
+#Authenticators
 
 @app.route('/authenticate_simple/<username>/<password>')
 def authenticate_simple(username, password):
@@ -29,7 +31,6 @@ def authenticate_simple(username, password):
     else:
         return username + " is not a valid username or wrong password. Try again";
 
-#Ejercicio 4
 
 @app.route('/authenticate_v2', methods=['POST'])
 def authenticate_v2():
@@ -41,11 +42,46 @@ def authenticate_v2():
     ).filter(entities.User.password == password
              ).first()
 
+@app.route('/authenticate', methods = ['POST'])
+def authenticate():
+    #Get data form request
+    time.sleep(1)
+    message = json.loads(request.data)
+    username = message['username']
+    password = message['password']
+
+   # Look in database
+    db_session = db.getSession(engine)
+
+    try:
+        user = db_session.query(entities.User
+            ).filter(entities.User.username==username
+            ).filter(entities.User.password==password
+            ).one()
+        session['logged_user'] = user.id
+        message = {'message':'Authorized'}
+        return Response(message, status=200,mimetype='application/json')
+    except Exception:
+        message = {'message':'Unauthorized'}
+        return Response(message, status=401,mimetype='application/json')
+
+
+#API de Users
+
+@app.route("/usuarios",methods = ['GET'])
+def all_users():
+    db_session = db.getSession(engine)
+    users = db_session.query(entities.User)
+    response = "";
+    for user in users:
+        response += user.username + "-"
+    return response;
+
 
 @app.route('/users', methods = ['POST'])
 def create_user():
-    #c =  json.loads(request.form['values'])
-    c = json.loads(request.data)
+    c =  json.loads(request.form['values'])
+    #c = json.loads(request.data)
     user = entities.User(
         username=c['username'],
         name=c['name'],
@@ -55,7 +91,7 @@ def create_user():
     session = db.getSession(engine)
     session.add(user)
     session.commit()
-    return 'Created User'
+    return render_template('Login.html')
 
 @app.route('/users/<id>', methods = ['GET'])
 def get_user(id):
@@ -75,35 +111,30 @@ def get_users():
     data = dbResponse[:]
     return Response(json.dumps(data, cls=connector.AlchemyEncoder), mimetype='application/json')
 
-@app.route('/users/<id>', methods = ['PUT'])
-def update_user(id):
+@app.route('/users', methods = ['PUT'])
+def update_user():
     session = db.getSession(engine)
-    #id = request.form['key']
+    id = request.form['key']
     user = session.query(entities.User).filter(entities.User.id == id).first()
-    # c = json.loads(request.form['values'])
-    c = json.loads(request.data)
+    c = json.loads(request.form['values'])
+    #c = json.loads(request.data)
+
     for key in c.keys():
         setattr(user, key, c[key])
     session.add(user)
     session.commit()
     return 'Updated User'
 
-@app.route('/users/<id>', methods = ['DELETE'])
-def delete_user(id):
-    #id = request.form['key']
+@app.route('/users', methods = ['DELETE'])
+def delete_user():
+    id = request.form['key']
     session = db.getSession(engine)
     user = session.query(entities.User).filter(entities.User.id == id).one()
     session.delete(user)
     session.commit()
     return "Deleted User"
 
-@app.route('/create_test_users', methods = ['GET'])
-def create_test_users():
-    db_session = db.getSession(engine)
-    user = entities.User(name="David", fullname="Lazo", password="1234", username="qwerty")
-    db_session.add(user)
-    db_session.commit()
-    return "Test user created!"
+#API de Messages
 
 @app.route('/messages', methods = ['POST'])
 def create_message():
@@ -202,28 +233,6 @@ def send_message():
     session.commit()
     return 'Message sent'
 
-@app.route('/authenticate', methods = ['POST'])
-def authenticate():
-    #Get data form request
-    time.sleep(1)
-    message = json.loads(request.data)
-    username = message['username']
-    password = message['password']
-
-   # Look in database
-    db_session = db.getSession(engine)
-
-    try:
-        user = db_session.query(entities.User
-            ).filter(entities.User.username==username
-            ).filter(entities.User.password==password
-            ).one()
-        session['logged_user'] = user.id
-        message = {'message':'Authorized'}
-        return Response(message, status=200,mimetype='application/json')
-    except Exception:
-        message = {'message':'Unauthorized'}
-        return Response(message, status=401,mimetype='application/json')
 
 @app.route('/current', methods = ['GET'])
 def current_user():
