@@ -58,13 +58,12 @@ def authenticate():
             ).filter(entities.User.username==username
             ).filter(entities.User.password==password
             ).one()
-        session['logged_user'] = user.id
+        session['loggedUser'] = user.id
         message = {'message':'Authorized'}
         return Response(message, status=200,mimetype='application/json')
     except Exception:
         message = {'message':'Unauthorized'}
         return Response(message, status=401,mimetype='application/json')
-
 
 #API de Users
 
@@ -136,19 +135,25 @@ def delete_user():
 
 #API de Messages
 
-@app.route('/messages', methods = ['POST'])
+@app.route('/messages', methods = ["POST"])
 def create_message():
-    c = json.loads(request.form['values'])
+    data = json.loads(request.data)
+    user_to_id = data['user_to_id']
+    user_from_id = data['user_from_id']
+    content = data['content']
+
     message = entities.Message(
-        content=c['content'],
-        sent_on=datetime.datetime(2000,2,2),
-        user_from_id=c['user_from_id'],
-        user_to_id=c['user_to_id']
-    )
-    session = db.getSession(engine)
-    session.add(message)
-    session.commit()
-    return 'Created Message'
+    user_to_id = user_to_id,
+    user_from_id = user_from_id,
+    content = content)
+
+    #2. Save in database
+    db_session = db.getSession(engine)
+    db_session.add(message)
+    db_session.commit()
+
+    response = {'message': 'created'}
+    return Response(json.dumps(response, cls=connector.AlchemyEncoder), status=200, mimetype='application/json')
 
 @app.route('/messages/<id>', methods = ['GET'])
 def get_message(id):
@@ -237,7 +242,7 @@ def send_message():
 @app.route('/current', methods = ['GET'])
 def current_user():
     db_session = db.getSession(engine)
-    user = db_session.query(entities.User).filter(entities.User.id == session['logged_user']).first()
+    user = db_session.query(entities.User).filter(entities.User.id == session['loggedUser']).first()
     return Response(json.dumps(user,cls=connector.AlchemyEncoder),mimetype='application/json')
 
 @app.route('/logout', methods = ['GET'])

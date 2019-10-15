@@ -39,26 +39,62 @@ function allUsers(){
         }
     });
 }
-function loadMessages(user_from_id,user_to_id){
-    currentClickedId = user_to_id;
-    $.ajax({
-        url:'/messages'+user_from_id+"/"+user_to_id,
-        type:'GET',
-        contentType:'application/json',
-        dataType:'json',
-        success:function(response){
-            $('#messages').html("");
-            var i = 0;
-            $.each(response,function(){
-                if(response[id]["user_from_id"]== user_to_id) {
+
+function loadMessages(user_from_id, user_to_id){
+        //alert(user_from_id);
+        //alert(user_to_id);
+        currentClickedId = user_to_id;
+        $.ajax({
+            url:'/messages/'+user_from_id+"/"+user_to_id,
+            type:'GET',
+            contentType: 'application/json',
+            dataType:'json',
+
+            success: function(response){
+                $('#messages').html("");
+                var i = 0;
+                $.each(response, function(){
+                if(response[i]["user_from_id"]== user_to_id){
                     f = '<div class="d-flex justify-content-start mb-4"><div class="msg_cotainer">';
                 }
-                else{
+                else {
                     f = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send" align="right" >';
                 }
-                })
-        }
-
-    })
+                    f = f + response[i].content;
+                    f = f + '</div>';
+                    i = i+1;
+                    $('#messages').append(f);
+                });
+            },
+            error: function(response){
+                alert(JSON.stringify(response));
+            }
+        });
 }
+
+function sendMessage(){
+        var message = $('#postmessage').val();
+        $('#postmessage').val('');
+
+        var data = JSON.stringify({
+                "user_from_id": currentUserId,
+                "user_to_id": currentClickedId,
+                "content": message
+            });
+
+        $.ajax({
+            url:'/messages',
+            type:'POST',
+            contentType: 'application/json',
+            data : data,
+            dataType:'json',
+            success: function(response){
+                loadMessages(currentUserId, currentClickedId)
+            },
+            error: function(response){
+                alert(JSON.stringify(response));
+            }
+        });
+    }
+
 
