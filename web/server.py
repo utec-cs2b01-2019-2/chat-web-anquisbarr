@@ -137,7 +137,8 @@ def delete_user():
 
 @app.route('/messages', methods = ["POST"])
 def create_message():
-    data = json.loads(request.data)
+    #data = json.loads(request.data)
+    data = json.loads(request.form['values'])
     user_to_id = data['user_to_id']
     user_from_id = data['user_from_id']
     content = data['content']
