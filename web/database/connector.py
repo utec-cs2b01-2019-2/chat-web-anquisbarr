@@ -9,7 +9,8 @@ class Manager:
     session = None
 
     def createEngine(self):
-        engine = create_engine('sqlite:///message.db?check_same_thread=False', echo=False)
+        uri = 'postgres://rmatvnywtusxkn:fb07a2b9c1d4485bb2676989b45ee9b6b6f90c22eb33df024ea4033ede788a6e@ec2-174-129-253-140.compute-1.amazonaws.com:5432/de8s0a2d458fvs'
+        engine = create_engine(uri, echo=False)
         self.Base.metadata.create_all(engine)
         return engine
 
