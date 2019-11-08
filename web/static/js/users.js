@@ -1,5 +1,5 @@
 $(function(){
-    var url = 'http:://'+document.domain+':'+location.port +'/users';
+    var url = "http:127.0.0.1:8000/users";
 
     $("#grid").dxDataGrid({
         dataSource: DevExpress.data.AspNet.createStore({
