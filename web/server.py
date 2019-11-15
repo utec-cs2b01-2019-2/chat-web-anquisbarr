@@ -90,7 +90,7 @@ def create_user():
     session = db.getSession(engine)
     session.add(user)
     session.commit()
-    return render_template('Login.html')
+    return 'Created User'
 
 @app.route('/users/<id>', methods = ['GET'])
 def get_user(id):
